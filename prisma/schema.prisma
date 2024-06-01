@@ -1,0 +1,64 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+type Subscription {
+  id      String?
+  status  String?
+  priceId String?
+}
+
+model User {
+  id                    String       @id @default(auto()) @map("_id") @db.ObjectId
+  name                  String
+  email                 String       @unique
+  password              String
+  stripeCustomerId      String?
+  subscription          Subscription
+  hasActiveSubscription Boolean
+  coverImage            String?      @default("/user-placeholder.png")
+  boards                Board[]
+  createdAt             DateTime     @default(now())
+  updatedAt             DateTime?    @updatedAt
+}
+
+model Board {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  name        String    @unique @default("New Board")
+  description String?
+  lists       List[]
+  owner       User      @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  userId      String    @db.ObjectId
+  coverImage  String?   @default("/clipboard.png")
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime? @updatedAt
+}
+
+model List {
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  order     Int?
+  name      String
+  cards     Card[]
+  board     Board     @relation(fields: [boardId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  boardId   String    @db.ObjectId
+  userId    String    @db.ObjectId
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
+}
+
+model Card {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  order       Int?
+  title       String    @unique
+  description String?
+  userId      String    @db.ObjectId
+  list        List      @relation(fields: [listId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  listId      String    @db.ObjectId
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime? @updatedAt
+}
